@@ -48,6 +48,8 @@ def normalize(data_ts, data_cur, state_pop, state_abrev):
 
     cur = pd.merge(states, cur, left_on = 'abbreviation', right_on = 'state')
     cur = cur.get(['date','state','POPESTIMATE2019','positive','negative','death'])
+    ts = pd.merge(states, ts, left_on = 'abbreviation', right_on = 'state')
+    ts = ts.get(['date','state','POPESTIMATE2019','positive','negative','death'])
     # Merge Population data into daily data using state abreviation data
 
     return ts, cur
@@ -67,8 +69,15 @@ def analyse(cur):
     return cur
 
 def analyse_ts(ts):
-    # calculate per 100k for current values
-
+    # calculate per 100k for daily values
+    pos_per = ts['positive']/ts['POPESTIMATE2019']*100000
+    ts['positive per 100k'] = pos_per
+    neg_per = ts['negative']/ts['POPESTIMATE2019']*100000
+    ts['negative per 100k'] = neg_per
+    death_per = ts['death']/ts['POPESTIMATE2019']*100000
+    ts['death per 100k'] = death_per
+    death_per_pos = ts['death']/ts['positive']*100
+    ts['mortality %'] = death_per_pos
     return ts
 
 
