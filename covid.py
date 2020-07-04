@@ -1,7 +1,7 @@
 import pandas as pd
 import urllib
 import matplotlib.pyplot as plt
-#git test 2
+
 
 def load_data():
 
@@ -12,6 +12,12 @@ def load_data():
     file.write(data)
     file.close()
 
+    url = f'https://covidtracking.com/api/v1/states/current.json'
+    uh = urllib.request.urlopen(url)
+    data = uh.read().decode()
+    file = open('covid_data_ts.json', 'w')
+    file.write(data)
+    file.close()
 
     data_cur = pd.read_json('covid_data_current.json')
     state_pop = pd.read_csv('SCPRC-EST2019-18+POP-RES.csv')
@@ -59,10 +65,7 @@ def analyse(cur):
 def output(data):
 
     print(data)
-    data.plot.bar(x='state', y='positive per 100k', rot=0, figsize = (14, 4))
-    data.plot.bar(x='state', y='negative per 100k', rot=0, figsize = (14, 4))
-    data.plot.bar(x='state', y='death per 100k', rot=0, figsize = (14, 4))
-    data.plot.bar(x='state', y='mortality %', rot=0, figsize = (14, 4))
+    data.plot.bar(x='state', y=['positive per 100k'], rot=0, figsize = (14, 14))
     plt.show()
 
 
