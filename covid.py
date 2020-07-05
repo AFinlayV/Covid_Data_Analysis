@@ -78,6 +78,9 @@ def analyse_ts(ts):
     ts['death per 100k'] = death_per
     death_per_pos = ts['death']/ts['positive']*100
     ts['mortality %'] = death_per_pos
+
+    ts_nc = ts.query('state == "NC"')
+    ts_ny = ts.query('state == ""')
     return ts
 
 
@@ -85,8 +88,8 @@ def output(data_cur, data_ts):
 
     print(data_cur, data_ts)
     data_cur.plot.bar(x='state',y=['mortality %', 'death per 100k'], rot=0, figsize = (14, 14), colormap='Dark2')
-    #data_cur.plot.bar(x='state', y=['mortality %'], c = ['red'], rot=0, figsize = (14, 14))
-
+    #plots = {data_ts['date']:(data_ts.query('state == "FL"'),data_ts.query('state == "NY"'),data_ts.query('state == "NC"'))}
+    #plt.plot([data_ts.query('state == "FL"')],[data_ts.query('state == "NY"')],[data_ts.query('state == "NC"')])
     plt.show()
 
 
