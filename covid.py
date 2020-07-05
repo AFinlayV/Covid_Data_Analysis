@@ -79,10 +79,8 @@ def analyse_ts(ts):
     death_per_pos = ts['death']/ts['positive']*100
     ts['mortality %'] = death_per_pos
 
-    ts_nc = ts.query('state == "NC"')
-    ts_ny = ts.query('state == ""')
     return ts
-
+# thing
 
 def output(data_cur, data_ts):
 
