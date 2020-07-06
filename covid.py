@@ -2,107 +2,85 @@ import pandas as pd
 import urllib
 import matplotlib.pyplot as plt
 
+STATE_POP_DATA='SCPRC-EST2019-18+POP-RES.csv'
+STATE_ABREV='state_abrev.json'
+COVID_DATA_URL='https://covidtracking.com/api/v1/states/daily.json'
+COVID_OUTPUT_FILE_NAME='covid_data.json'
+GET_FIELDS_STATE=['NAME', 'POPESTIMATE2019']
+GET_FIELDS_COVID=['date','state','positive','negative','death']
+ALL_FIELDS=['date','state','POPESTIMATE2019','positive','negative','death']
+OUTPUT_LIST=['mortality %', 'death %']
+STATES=['NC', 'SC', 'FL']
+DEBUG = False
+LOAD_NEW_DATA=False
 
-def load_data():
+def debug(message):
+    if DEBUG == True:
+        print(message)
 
-    url = f'https://covidtracking.com/api/v1/states/current.json'
+def load_data_and_save(url, output_file_name):
+    print(f'Loading data from {url} and saving to {output_file_name}...')
     uh = urllib.request.urlopen(url)
     data = uh.read().decode()
-    file = open('covid_data_current.json', 'w')
+    file = open(output_file_name, 'w')
     file.write(data)
     file.close()
+    debug(f'Loaded data: \n {data}')
+    debug(f'Data saved to \n {output_file_name}')
 
-    url = f'https://covidtracking.com/api/v1/states/daily.json'
-    uh = urllib.request.urlopen(url)
-    data = uh.read().decode()
-    file = open('covid_data_ts.json', 'w')
-    file.write(data)
-    file.close()
+def parse_to_pd(data_file_name):
+    print(f'Reading data from {data_file_name}...')
+    data=pd.read_json(data_file_name)
+    data['date']=pd.to_datetime(data['date'], format='%Y%m%d')
+    state_pop=pd.read_csv(STATE_POP_DATA)
+    state_abrev=pd.read_json(STATE_ABREV)
+    states=pd.merge(state_abrev, state_pop, left_on="name", right_on="NAME")
+    data=pd.merge(states, data.get(GET_FIELDS_COVID), left_on='abbreviation', right_on='state')
+    data=data.get(ALL_FIELDS)
+    debug(f'Parsed data: \n {data}')
+    return data
 
-    data_ts = pd.read_json('covid_data_ts.json')
-    data_ts['date'] =  pd.to_datetime(data_ts['date'], format='%Y%m%d', errors='ignore')
+def load_states(data):
+    state_data_lst=[]
+    for state in STATES:
+        state_data_lst.append(state_data(data, state))
+    debug(f'loaded states: \n {state_data_lst}')
+    return state_data_lst
 
-    data_cur = pd.read_json('covid_data_current.json')
-    data_cur['date'] =  pd.to_datetime(data_cur['date'], format='%Y%m%d', errors='ignore')
+def state_data(data, state):
+    state_data= data.query(f'state == "{state}"')
+    debug(f'Loaded state data list ({state}): \n {state_data}')
+    return state_data
 
-    state_pop = pd.read_csv('SCPRC-EST2019-18+POP-RES.csv')
-    state_abrev = pd.read_json('state_abrev.json')
+def analyse(data):
+    debug(type(data))
+    for state in data:
+        print('Calculating percentages...')
+        debug(type(state))
+        state['positive %'] = (state['positive'] / state['POPESTIMATE2019']) * 100
+        state['negative %']  = (state['negative'] / state['POPESTIMATE2019']) * 100
+        state['death %'] = (state['death'] / state['POPESTIMATE2019']) * 100
+        state['mortality %'] = (state['death'] / state['positive']) * 100
+        state['tested %'] = ((state['positive'] + state['negative']) / state['POPESTIMATE2019']) * 100
 
-    return data_ts, data_cur, state_pop, state_abrev
+        debug(f'Analysed {state} data: \n {data}')
+    return data
 
+def output(data):
 
-def normalize(data_ts, data_cur, state_pop, state_abrev):
-    #load relavent data
-    pop = state_pop.get(['NAME', 'POPESTIMATE2019'])
-    cur = data_cur.get(['date','state','positive','negative','death'])
-    ab = state_abrev
-    ts = data_ts.get(['date','state','positive','negative','death'])
-    # Convert date format in daily and current data
-    #ts['date'] =  pd.to_datetime(ts['date'], format='%Y%m%d', errors='ignore')
+    print(data)
 
+def graph(data, states):
 
-    # Merge state population data with state abreviations
-    states = pd.merge(ab, pop, left_on ="name", right_on = "NAME")
+    return data
 
-    # Merge Population data into current data using state abreviation data
+def run():
+    if LOAD_NEW_DATA == True:
+        load_data_and_save(COVID_DATA_URL, COVID_OUTPUT_FILE_NAME)
+    data = parse_to_pd(COVID_OUTPUT_FILE_NAME)
+    data = load_states(data)
+    data = analyse(data)
+    output(data)
+    graph(data, STATES)
 
-    cur = pd.merge(states, cur, left_on = 'abbreviation', right_on = 'state')
-    cur = cur.get(['date','state','POPESTIMATE2019','positive','negative','death'])
-    ts = pd.merge(states, ts, left_on = 'abbreviation', right_on = 'state')
-    ts = ts.get(['date','state','POPESTIMATE2019','positive','negative','death'])
-    # Merge Population data into daily data using state abreviation data
-
-    return ts, cur
-
-
-def analyse(cur):
-    # calculate per 100k for current values
-    pos_per = cur['positive']/cur['POPESTIMATE2019']*100000
-    cur['positive per 100k'] = pos_per
-    neg_per = cur['negative']/cur['POPESTIMATE2019']*100000
-    cur['negative per 100k'] = neg_per
-    death_per = cur['death']/cur['POPESTIMATE2019']*100000
-    cur['death per 100k'] = death_per
-    death_per_pos = cur['death']/cur['positive']*100
-    cur['mortality %'] = death_per_pos
-
-    return cur
-
-def analyse_ts(ts):
-    # calculate per 100k for daily values
-    pos_per = ts['positive']/ts['POPESTIMATE2019']*100000
-    ts['positive per 100k'] = pos_per
-    neg_per = ts['negative']/ts['POPESTIMATE2019']*100000
-    ts['negative per 100k'] = neg_per
-    death_per = ts['death']/ts['POPESTIMATE2019']*100000
-    ts['death per 100k'] = death_per
-    death_per_pos = ts['death']/ts['positive']*100
-    ts['mortality %'] = death_per_pos
-
-    return ts
-# thing
-
-def output(data_cur, data_ts):
-
-    print(data_cur, data_ts)
-    data_cur.plot.bar(x='state',y=['mortality %', 'death per 100k'], rot=0, figsize = (14, 14), colormap='Dark2')
-    #plots = {data_ts['date']:(data_ts.query('state == "FL"'),data_ts.query('state == "NY"'),data_ts.query('state == "NC"'))}
-    #plt.plot([data_ts.query('state == "FL"')],[data_ts.query('state == "NY"')],[data_ts.query('state == "NC"')])
-    plt.show()
-
-
-    return data_cur, data_ts
-
-
-
-
-def main():
-    data_ts, data_cur, state_pop, state_abrev = load_data()
-    ts, cur = normalize(data_ts, data_cur, state_pop, state_abrev)
-    data_cur = analyse(cur)
-    data_ts = analyse_ts(ts)
-
-    output(data_cur, data_ts)
-
-
-main()
+run()
