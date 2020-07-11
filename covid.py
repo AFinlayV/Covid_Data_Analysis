@@ -17,7 +17,7 @@ if 'all' in STATES:
           "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ",
           "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC",
           "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY"]
-    
+    #github test
 
 DEBUG = False
 LOAD_NEW_DATA=False
