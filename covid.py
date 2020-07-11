@@ -17,10 +17,11 @@ if 'all' in STATES:
           "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ",
           "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC",
           "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY"]
-    #github test
+
 
 DEBUG = False
-LOAD_NEW_DATA=False
+LOAD_NEW_DATA=True
+
 
 def debug(message):
     if DEBUG == True:
@@ -70,7 +71,8 @@ def state_data(data, state):
 
 def analyse(data):
     for state in data:
-        print('Calculating percentages...')
+        state_name = state['state']
+        print(f'Calculating percentages for {state_name}...')
         state['positive %'] = (state['positive'] / state['POPESTIMATE2019']) * 100
         state['negative %']  = (state['negative'] / state['POPESTIMATE2019']) * 100
         state['death %'] = (state['death'] / state['POPESTIMATE2019']) * 100
