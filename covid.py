@@ -10,17 +10,15 @@ GET_FIELDS_STATE=['NAME', 'POPESTIMATE2019']
 GET_FIELDS_COVID=['date','state','positive','negative','death', 'positiveIncrease','negativeIncrease', 'totalTestResults']
 ALL_FIELDS=['date','state','POPESTIMATE2019','positive','negative','death', 'positiveIncrease','negativeIncrease','totalTestResults']
 OUTPUT_LIST=['mortality %', 'death %']
-STATES=['all']
+STATES=['NC', 'SC']
 if 'all' in STATES:
     STATES = ["AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DC", "DE", "FL", "GA",
           "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD",
           "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ",
           "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC",
           "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY"]
-
-
-DEBUG = False
-LOAD_NEW_DATA=True
+DEBUG=False
+LOAD_NEW_DATA=False
 
 
 def debug(message):
@@ -84,7 +82,8 @@ def analyse(data):
     return data
 
 def output(data):
-
+    if DEBUG:
+        print(type(data))
     print(data)
 
 def graph(data, states):
