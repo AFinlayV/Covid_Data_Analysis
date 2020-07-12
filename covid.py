@@ -69,7 +69,6 @@ def state_data(data, state):
 def analyse(data):
     print('Analysing data...')
     for state in data:
-
         state['positive %'] = (state['positive'] / state['POPESTIMATE2019']) * 100
         state['negative %']  = (state['negative'] / state['POPESTIMATE2019']) * 100
         state['death %'] = (state['death'] / state['POPESTIMATE2019']) * 100
@@ -87,6 +86,14 @@ def ts(data, field):
         data_list.append(nt_pos)
     return data_list
 
+def cur(data, state):
+    cur_dict = {}
+    # Magic???
+    return cur_dict
+
+def output(data):
+    print(data)
+    # graph data
 
 def run():
 
@@ -95,7 +102,10 @@ def run():
     data_pd = parse_to_pd(COVID_OUTPUT_FILE_NAME)
     data_states = load_states(data_pd)
     data_analysis = analyse(data_states)
-    data_ts = ts(data_analysis, 'tested %')
-    print(data_ts)
+    all_ts_data =[]
+    for field in OUTPUT_LIST:
+        data_ts = ts(data_analysis, field)
+        all_ts_data.append(data_ts)
+    output(all_ts_data)
 
 run()
