@@ -10,48 +10,24 @@ GET_FIELDS_STATE=['NAME', 'POPESTIMATE2019']
 GET_FIELDS_COVID=['date','state','positive','negative','death', 'positiveIncrease','negativeIncrease', 'totalTestResults']
 ALL_FIELDS=['date','state','POPESTIMATE2019','positive','negative','death', 'positiveIncrease','negativeIncrease','totalTestResults']
 OUTPUT_LIST=['mortality %', 'death %']
-STATES=['NC', 'SC']
+STATES=['all']
 if 'all' in STATES:
     STATES = ["AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DC", "DE", "FL", "GA",
           "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD",
           "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ",
           "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC",
           "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY"]
-DEBUG=True
+DEBUG=False
 LOAD_NEW_DATA=False
 
-class covid:
-    '''
-    Takes in:
-    self -a pandas dataframe
-    state -2 letter state abreviation
-    field - column name for data to be returned
 
-    returns:
-    returns a dataframe of time series data for the requested column
-    '''
-    def __init__(self, state, field):
-        debug('self type:', type(self))
-        debug('state type:', type(state))
-        debug('field type:', type(field))
+def ts(self, state, date_start, date_end, field):
+    ts_data = [self, state, date_start, date_end, field]
+    return ts_data
 
-
-        #data = self.query(f'state == "{state}"')
-        #ts_data = data
-        #print(type(data), type(ts_data))
-        #return ts_data
-    def ts(self, state, date_start, date_end, field):
-        ts_data = [self, state, date_start, date_end, field]
-        return ts_data
-
-    def cur(self, state):
-        cur_data = [self, state]
-        return cur_data
-
-
-
-
-
+def cur(self, state):
+    cur_data = [self, state]
+    return cur_data
 
 def debug(message, data):
     if DEBUG == True:
@@ -114,8 +90,6 @@ def analyse(data):
     return data
 
 def output(data):
-    if DEBUG:
-        print(type(data))
     print(data)
 
 def graph(data, states):
@@ -126,19 +100,11 @@ def run():
 
 
     load_data_and_save(COVID_DATA_URL, COVID_OUTPUT_FILE_NAME)
-
-    data = parse_to_pd(COVID_OUTPUT_FILE_NAME)
-    debug('data after parse:', type(data))
-    obj_data = covid(data)
-    debug('data from object', type(obj_data))
-    data = obj_data.ts('SC', '2020-03-03', '2020-07-10', 'positive')
-    debug('Time series data:', data)
-    data = obj_data.cur('SC')
-    debug('Current data:', data)
-    #print(data2)
-    #data = load_states(data)
-    #data = analyse(data)
-    #output(data)
-    #graph(data, STATES)
+    data_pd = parse_to_pd(COVID_OUTPUT_FILE_NAME)
+    debug('data type after parse:', type(data_pd))
+    data = load_states(data_pd)
+    data = analyse(data)
+    output(data)
+    graph(data, STATES)
 
 run()
