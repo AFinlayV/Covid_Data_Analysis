@@ -24,6 +24,7 @@ Things to do:
 
 '''
 
+
 STATE_POP_DATA='SCPRC-EST2019-18+POP-RES.csv'
 STATE_ABREV='state_abrev.json'
 COVID_DATA_URL='https://covidtracking.com/api/v1/states/daily.json'
@@ -52,29 +53,7 @@ if 'all' in STATES:
           "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC",
           "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY"]
 
-def fancy_print(message, data):
-    '''
-    print messages and data in an easier to read format
-    '''
-    print( "\n---------------------------\n", message, "\n~~~~~~~~~~\n", data, "\n---------------------------\n")
 
-
-def debug(message, data):
-    '''
-    print debug messages and data
-    '''
-    if DEBUG:
-        fancy_print(message, data)
-
-def show_info(data):
-    '''
-    Show metadata in command line display
-    '''
-    if SHOW_DATA:
-        fancy_print('column data:', data.columns)
-        fancy_print('data types:', data.dtypes)
-        fancy_print('DataFrame size:', data.size)
-        fancy_print('DataFrame shape:', data.shape)
 
 
 def load_data_and_save(url, output_file_name):
@@ -118,9 +97,21 @@ def analyse(data):
     data['tested_per_cent'] = (data['totalTestResults'] / data['POPESTIMATE2019']) * 100
     data['positive_negative_per_cent'] = (data['positive'] / data['negative']) * 100
     data['new_test_positive_per_cent'] = (data['positiveIncrease'] / data['totalTestResultsIncrease']) * 100
-
-
     return data
+
+def output(data):
+    '''
+    display metadata in command line
+    generate time series graphs via matplotlib
+    generate current graphs via matplotlib
+    display graphs
+    '''
+
+    register_matplotlib_converters()
+    show_info(data)
+    plot_time(data)
+    plot_cur(data)
+    plt.show()
 
 
 def plot_time(data):
@@ -157,23 +148,36 @@ def plot_cur(data):
         # figure out how to make positive_increase_per_cent and death_per_cent to be determined by OUTPUT_LIST constant
         ax1.barh(state, cur_data.positive_increase_per_cent[data.state == state])
         ax2.barh(state, cur_data.death_per_cent[data.state == state])
+
     ax1.set(title=f'New Covid-19 cases as % of population for {date_cur[0:10]}')
     ax1.xaxis.set_major_formatter(mtick.PercentFormatter(xmax=100, decimals=None, symbol='%', is_latex=False))
+
     ax2.set(title=f'New Covid-19 deaths as % of population for {date_cur[0:10]}')
     ax2.xaxis.set_major_formatter(mtick.PercentFormatter(xmax=100, decimals=None, symbol='%', is_latex=False))
 
-
-def output(data):
+def fancy_print(message, data):
     '''
-    display metadata in command line and display graphs via matplotlib
+    print messages and data in an easier to read format
     '''
+    print( "\n---------------------------\n", message, "\n~~~~~~~~~~\n", data, "\n---------------------------\n")
 
-    register_matplotlib_converters()
-    show_info(data)
-    plot_time(data)
-    plot_cur(data)
-    plt.show()
 
+def debug(message, data):
+    '''
+    print debug messages and data
+    '''
+    if DEBUG:
+        fancy_print(message, data)
+
+def show_info(data):
+    '''
+    Show metadata in command line display
+    '''
+    if SHOW_DATA:
+        fancy_print('column data:', data.columns)
+        fancy_print('data types:', data.dtypes)
+        fancy_print('DataFrame size:', data.size)
+        fancy_print('DataFrame shape:', data.shape)
 
 def run():
     '''
