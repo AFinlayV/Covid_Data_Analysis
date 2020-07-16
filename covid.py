@@ -2,7 +2,6 @@ import pandas as pd
 import urllib.request as urllib
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
-
 import pdb
 from pandas.plotting import register_matplotlib_converters
 
@@ -15,20 +14,23 @@ GET_FIELDS_STATE=['NAME', 'POPESTIMATE2019']
 GET_FIELDS_COVID=['date','state','positive','negative','death', 'totalTestResults', 'deathIncrease','positiveIncrease','negativeIncrease', 'totalTestResultsIncrease', ]
 ALL_FIELDS=['date','state','POPESTIMATE2019','positive','negative','death', 'totalTestResults', 'deathIncrease', 'positiveIncrease','negativeIncrease','totalTestResultsIncrease']
 OUTPUT_LIST=['mortality %', 'death %']
-STATES=['NC', 'SC', 'NY', 'FL']
+STATES=['NC', 'SC', 'FL', 'CA', 'GA']
 if 'all' in STATES:
     STATES = ["AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DC", "DE", "FL", "GA",
           "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD",
           "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ",
           "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC",
           "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY"]
-DEBUG=True
+DEBUG=False
+SHOW_DATA=False
 LOAD_NEW_DATA=False
 
+def fancy_print(message, data):
+    print(message, "\n---------------------------\n", data, "\n---------------------------\n")
 
 def debug(message, data):
-    if DEBUG == True:
-        print(message, "\n---------------------------\n", data, "\n---------------------------\n")
+    if DEBUG:
+        fancy_print(message, data)
 
 def load_data_and_save(url, output_file_name):
     if LOAD_NEW_DATA == True:
@@ -50,8 +52,6 @@ def load_data_and_save(url, output_file_name):
 
 def analyse(data):
 
-    show_info(data)
-
     data['date']=pd.to_datetime(data['date'], format='%Y%m%d')
     state_pop=pd.read_csv(STATE_POP_DATA)
     state_abrev=pd.read_json(STATE_ABREV)
@@ -68,44 +68,57 @@ def analyse(data):
     data['positive_negative_per_cent'] = (data['positive'] / data['negative']) * 100
     data['new_test_positive_per_cent'] = (data['positiveIncrease'] / data['totalTestResultsIncrease']) * 100
 
-    show_info(data)
 
     return data
 
-
-
-def output(data):
-    register_matplotlib_converters()
-    
-    show_info(data)
-
-    # graph data
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 8))
-
+def plot_time(data):
+    # plot time series data for states in question
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 6))
     for state in STATES:
         ax1.plot(data[data.state == state].date, data[data.state == state].positive_increase_per_cent.rolling(7).mean(), label = state)
         ax2.plot(data[data.state == state].date, data[data.state == state].death_per_cent.rolling(7).mean(), label = state)
 
-    ax1.set(title='New Covid-19 cases as % of population (rolling 7 day average)')
+    ax1.set(title='New Covid-19 cases as % of pop (7 day average)')
     labels_x = ax1.get_xticklabels()
     ax1.yaxis.set_major_formatter(mtick.PercentFormatter(xmax=100, decimals=None, symbol='%', is_latex=False))
     plt.setp(labels_x, rotation=20, horizontalalignment='right')
     ax1.legend()
 
-    ax2.set(title='New Covid-19 deaths as % of population (rolling 7 day average)')
+    ax2.set(title='New Covid-19 deaths as % of pop (7 day average)')
     labels_x = ax2.get_xticklabels()
     ax2.yaxis.set_major_formatter(mtick.PercentFormatter(xmax=100, decimals=None, symbol='%', is_latex=False))
     plt.setp(labels_x, rotation=20, horizontalalignment='right')
     ax2.legend()
 
 
+def plot_cur(data):
+    # plot current data on bar graph
+    date_cur = str(data.date[0])
+    cur_data = data[data.date == date_cur]
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 6))
+    for state in STATES:
+        ax1.barh(state, cur_data.positive_increase_per_cent[data.state == state])
+        ax2.barh(state, cur_data.death_per_cent[data.state == state])
+    ax1.set(title=f'New Covid-19 cases as % of population for {date_cur[0:10]}')
+    ax1.xaxis.set_major_formatter(mtick.PercentFormatter(xmax=100, decimals=None, symbol='%', is_latex=False))
+    ax2.set(title=f'New Covid-19 deaths as % of population for {date_cur[0:10]}')
+    ax2.xaxis.set_major_formatter(mtick.PercentFormatter(xmax=100, decimals=None, symbol='%', is_latex=False))
+
+
+def output(data):
+    register_matplotlib_converters()
+    plot_time(data)
+    plot_cur(data)
+    show_info(data)
     plt.show()
 
+
 def show_info(data):
-    debug('column data:', data.columns)
-    debug('data types:', data.dtypes)
-    debug('DataFrame size:', data.size)
-    debug('DataFrame shape:', data.shape)
+    if SHOW_DATA:
+        fancy_print('column data:', data.columns)
+        fancy_print('data types:', data.dtypes)
+        fancy_print('DataFrame size:', data.size)
+        fancy_print('DataFrame shape:', data.shape)
 
 def run():
 
