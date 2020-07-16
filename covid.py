@@ -5,7 +5,7 @@ import matplotlib.ticker as mtick
 
 import pdb
 from pandas.plotting import register_matplotlib_converters
-register_matplotlib_converters()
+
 
 STATE_POP_DATA='SCPRC-EST2019-18+POP-RES.csv'
 STATE_ABREV='state_abrev.json'
@@ -15,7 +15,7 @@ GET_FIELDS_STATE=['NAME', 'POPESTIMATE2019']
 GET_FIELDS_COVID=['date','state','positive','negative','death', 'totalTestResults', 'deathIncrease','positiveIncrease','negativeIncrease', 'totalTestResultsIncrease', ]
 ALL_FIELDS=['date','state','POPESTIMATE2019','positive','negative','death', 'totalTestResults', 'deathIncrease', 'positiveIncrease','negativeIncrease','totalTestResultsIncrease']
 OUTPUT_LIST=['mortality %', 'death %']
-STATES=['NC', 'SC', 'FL', 'NY', 'CA']
+STATES=['NC', 'SC', 'NY', 'FL']
 if 'all' in STATES:
     STATES = ["AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DC", "DE", "FL", "GA",
           "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD",
@@ -75,17 +75,30 @@ def analyse(data):
 
 
 def output(data):
-    debug("output data", data)
+    register_matplotlib_converters()
+    
+    show_info(data)
+
     # graph data
-    fig, ax = plt.subplots(figsize=(8, 6))
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 8))
+
     for state in STATES:
-        ax.plot(data[data.state == state].date, data[data.state == state].positive_increase_per_cent.rolling(7).mean(), label = state)
-    ax.set(title='New Covid-19 cases as % of population (rolling 7 day average)')
-    labels_x = ax.get_xticklabels()
-    ax.yaxis.set_major_formatter(mtick.PercentFormatter(xmax=100, decimals=None, symbol='%', is_latex=False))
+        ax1.plot(data[data.state == state].date, data[data.state == state].positive_increase_per_cent.rolling(7).mean(), label = state)
+        ax2.plot(data[data.state == state].date, data[data.state == state].death_per_cent.rolling(7).mean(), label = state)
+
+    ax1.set(title='New Covid-19 cases as % of population (rolling 7 day average)')
+    labels_x = ax1.get_xticklabels()
+    ax1.yaxis.set_major_formatter(mtick.PercentFormatter(xmax=100, decimals=None, symbol='%', is_latex=False))
     plt.setp(labels_x, rotation=20, horizontalalignment='right')
-    ax.legend()
-    plt.rcParams.update({'figure.autolayout': True})
+    ax1.legend()
+
+    ax2.set(title='New Covid-19 deaths as % of population (rolling 7 day average)')
+    labels_x = ax2.get_xticklabels()
+    ax2.yaxis.set_major_formatter(mtick.PercentFormatter(xmax=100, decimals=None, symbol='%', is_latex=False))
+    plt.setp(labels_x, rotation=20, horizontalalignment='right')
+    ax2.legend()
+
+
     plt.show()
 
 def show_info(data):
