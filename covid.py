@@ -6,6 +6,24 @@ import pdb
 from pandas.plotting import register_matplotlib_converters
 
 
+'''
+Things to do:
+
+- add input interface
+    -choose STATES
+    -choose which data to display
+    -save graphs to file
+    -download new data
+
+- graph elements listed in OUTPUT_LIST global variable
+
+- move global constants to config file
+
+- move state population data and abreviations to json file of constants (abrev, pop, name)
+
+- check if data has been downloaded in the last 24 hours, if not, download new data
+'''
+
 STATE_POP_DATA='SCPRC-EST2019-18+POP-RES.csv'
 STATE_ABREV='state_abrev.json'
 COVID_DATA_URL='https://covidtracking.com/api/v1/states/daily.json'
@@ -26,16 +44,36 @@ SHOW_DATA=True
 LOAD_NEW_DATA=True
 
 def fancy_print(message, data):
-    print(message, "\n---------------------------\n", data, "\n---------------------------\n")
+    '''
+    print messages and data in an easier to read format
+    '''
+    print( "\n---------------------------\n", message, "\n~~~~~~~~~~\n", data, "\n---------------------------\n")
 
 
 def debug(message, data):
+    '''
+    print debug messages and data
+    '''
     if DEBUG:
         fancy_print(message, data)
 
+def show_info(data):
+    '''
+    Show metadata in command line display
+    '''
+    if SHOW_DATA:
+        fancy_print('column data:', data.columns)
+        fancy_print('data types:', data.dtypes)
+        fancy_print('DataFrame size:', data.size)
+        fancy_print('DataFrame shape:', data.shape)
+
 
 def load_data_and_save(url, output_file_name):
-    if LOAD_NEW_DATA == True:
+    '''
+    Load new data by either downloading new data from the internet, or reading from a saved local file
+
+    '''
+    if LOAD_NEW_DATA:
         print(f'Loading data from {url} and saving to {output_file_name}...')
         uh = urllib.urlopen(url)
         data = uh.read().decode()
@@ -53,7 +91,10 @@ def load_data_and_save(url, output_file_name):
 
 
 def analyse(data):
-
+    '''
+    merge tables to get population data into dataframe
+    calculate new columns as a percentage of state population
+    '''
     data['date']=pd.to_datetime(data['date'], format='%Y%m%d')
     state_pop=pd.read_csv(STATE_POP_DATA)
     state_abrev=pd.read_json(STATE_ABREV)
@@ -75,7 +116,9 @@ def analyse(data):
 
 
 def plot_time(data):
-    # plot time series data for states in question
+    '''
+    plot time series data for states in listed in STATES constant
+    '''
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 6))
     for state in STATES:
         ax1.plot(data[data.state == state].date, data[data.state == state].positive_increase_per_cent.rolling(7).mean(), label = state)
@@ -95,7 +138,9 @@ def plot_time(data):
 
 
 def plot_cur(data):
-    # plot current data on bar graph
+    '''
+    plot current data on bar graph for states listed in STATES constant
+    '''
     date_cur = str(data.date[0])
     cur_data = data[data.date == date_cur]
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 6))
@@ -109,26 +154,24 @@ def plot_cur(data):
 
 
 def output(data):
+    '''
+    display metadata in command line and display graphs via matplotlib
+    '''
+
     register_matplotlib_converters()
+    show_info(data)
     plot_time(data)
     plot_cur(data)
-    show_info(data)
     plt.show()
 
 
-def show_info(data):
-    if SHOW_DATA:
-        fancy_print('column data:', data.columns)
-        fancy_print('data types:', data.dtypes)
-        fancy_print('DataFrame size:', data.size)
-        fancy_print('DataFrame shape:', data.shape)
-
-
 def run():
-
+    '''
+    main function - load data, analyse data, display data
+    '''
     raw_data = load_data_and_save(COVID_DATA_URL, COVID_OUTPUT_FILE_NAME)
-    data_clean = analyse(raw_data)
-    output(data_clean)
+    clean_data = analyse(raw_data)
+    output(clean_data)
 
 
 run()
