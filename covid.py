@@ -14,23 +14,25 @@ GET_FIELDS_STATE=['NAME', 'POPESTIMATE2019']
 GET_FIELDS_COVID=['date','state','positive','negative','death', 'totalTestResults', 'deathIncrease','positiveIncrease','negativeIncrease', 'totalTestResultsIncrease', ]
 ALL_FIELDS=['date','state','POPESTIMATE2019','positive','negative','death', 'totalTestResults', 'deathIncrease', 'positiveIncrease','negativeIncrease','totalTestResultsIncrease']
 OUTPUT_LIST=['mortality %', 'death %']
-STATES=['NC', 'SC', 'FL', 'CA', 'GA']
+STATES=['NC', 'SC', 'FL', 'CA', 'GA', 'VA', 'NY']
 if 'all' in STATES:
     STATES = ["AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DC", "DE", "FL", "GA",
           "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD",
           "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ",
           "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC",
           "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY"]
-DEBUG=False
-SHOW_DATA=False
-LOAD_NEW_DATA=False
+DEBUG=True
+SHOW_DATA=True
+LOAD_NEW_DATA=True
 
 def fancy_print(message, data):
     print(message, "\n---------------------------\n", data, "\n---------------------------\n")
 
+
 def debug(message, data):
     if DEBUG:
         fancy_print(message, data)
+
 
 def load_data_and_save(url, output_file_name):
     if LOAD_NEW_DATA == True:
@@ -70,6 +72,7 @@ def analyse(data):
 
 
     return data
+
 
 def plot_time(data):
     # plot time series data for states in question
@@ -120,11 +123,12 @@ def show_info(data):
         fancy_print('DataFrame size:', data.size)
         fancy_print('DataFrame shape:', data.shape)
 
-def run():
 
+def run():
 
     raw_data = load_data_and_save(COVID_DATA_URL, COVID_OUTPUT_FILE_NAME)
     data_clean = analyse(raw_data)
     output(data_clean)
+
 
 run()
