@@ -1,6 +1,7 @@
 import pandas as pd
 import urllib.request as urllib
 import matplotlib.pyplot as plt
+import matplotlib.ticker as mtick
 
 import pdb
 from pandas.plotting import register_matplotlib_converters
@@ -11,23 +12,23 @@ STATE_ABREV='state_abrev.json'
 COVID_DATA_URL='https://covidtracking.com/api/v1/states/daily.json'
 COVID_OUTPUT_FILE_NAME='covid_data.json'
 GET_FIELDS_STATE=['NAME', 'POPESTIMATE2019']
-GET_FIELDS_COVID=['date','state','positive','negative','death', 'totalTestResults', 'positiveIncrease','negativeIncrease', 'totalTestResultsIncrease', ]
-ALL_FIELDS=['date','state','POPESTIMATE2019','positive','negative','death', 'totalTestResults', 'positiveIncrease','negativeIncrease','totalTestResultsIncrease']
+GET_FIELDS_COVID=['date','state','positive','negative','death', 'totalTestResults', 'deathIncrease','positiveIncrease','negativeIncrease', 'totalTestResultsIncrease', ]
+ALL_FIELDS=['date','state','POPESTIMATE2019','positive','negative','death', 'totalTestResults', 'deathIncrease', 'positiveIncrease','negativeIncrease','totalTestResultsIncrease']
 OUTPUT_LIST=['mortality %', 'death %']
-STATES=['NC', 'NY', 'FL']
+STATES=['NC', 'SC', 'FL', 'NY', 'CA']
 if 'all' in STATES:
     STATES = ["AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DC", "DE", "FL", "GA",
           "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD",
           "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ",
           "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC",
           "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY"]
-DEBUG=False
+DEBUG=True
 LOAD_NEW_DATA=False
 
 
 def debug(message, data):
     if DEBUG == True:
-        print(message, "\n-----------------------------\n", data, "\n-----------------------------\n")
+        print(message, "\n---------------------------\n", data, "\n---------------------------\n")
 
 def load_data_and_save(url, output_file_name):
     if LOAD_NEW_DATA == True:
@@ -37,8 +38,8 @@ def load_data_and_save(url, output_file_name):
         file = open(output_file_name, 'w')
         file.write(data)
         file.close()
-        debug('Loaded data:', data)
-        debug('Data saved to:', output_file_name)
+        debug('Loaded new raw data:', data)
+        debug('Data saved to file:', output_file_name)
         data=pd.read_json(data)
         return data
     else:
@@ -61,7 +62,7 @@ def analyse(data):
     data['positive_per_cent'] = (data['positive'] / data['POPESTIMATE2019']) * 100
     data['negative_per_cent']  = (data['negative'] / data['POPESTIMATE2019']) * 100
     data['positive_increase_per_cent'] = (data['positiveIncrease'] / data['POPESTIMATE2019']) * 100
-    data['death_per_cent'] = (data['death'] / data['POPESTIMATE2019']) * 100
+    data['death_per_cent'] = (data['deathIncrease'] / data['POPESTIMATE2019']) * 100
     data['mortality_per_cent'] = (data['death'] / data['positive']) * 100
     data['tested_per_cent'] = (data['totalTestResults'] / data['POPESTIMATE2019']) * 100
     data['positive_negative_per_cent'] = (data['positive'] / data['negative']) * 100
@@ -76,13 +77,15 @@ def analyse(data):
 def output(data):
     debug("output data", data)
     # graph data
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(8, 6))
     for state in STATES:
         ax.plot(data[data.state == state].date, data[data.state == state].positive_increase_per_cent.rolling(7).mean(), label = state)
-    ax.set(title='Positive increase as % of population (rolling 7 day average)')
-    labels = ax.get_xticklabels()
-    plt.setp(labels, rotation=45, horizontalalignment='right')
+    ax.set(title='New Covid-19 cases as % of population (rolling 7 day average)')
+    labels_x = ax.get_xticklabels()
+    ax.yaxis.set_major_formatter(mtick.PercentFormatter(xmax=100, decimals=None, symbol='%', is_latex=False))
+    plt.setp(labels_x, rotation=20, horizontalalignment='right')
     ax.legend()
+    plt.rcParams.update({'figure.autolayout': True})
     plt.show()
 
 def show_info(data):
