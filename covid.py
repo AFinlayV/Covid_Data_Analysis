@@ -2,7 +2,6 @@ import pandas as pd
 import urllib.request as urllib
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
-import pdb
 from pandas.plotting import register_matplotlib_converters
 
 
@@ -22,6 +21,7 @@ Things to do:
 - move state population data and abreviations to json file of constants (abrev, pop, name)
 
 - check if data has been downloaded in the last 24 hours, if not, download new data
+
 '''
 
 STATE_POP_DATA='SCPRC-EST2019-18+POP-RES.csv'
@@ -31,17 +31,26 @@ COVID_OUTPUT_FILE_NAME='covid_data.json'
 GET_FIELDS_STATE=['NAME', 'POPESTIMATE2019']
 GET_FIELDS_COVID=['date','state','positive','negative','death', 'totalTestResults', 'deathIncrease','positiveIncrease','negativeIncrease', 'totalTestResultsIncrease', ]
 ALL_FIELDS=['date','state','POPESTIMATE2019','positive','negative','death', 'totalTestResults', 'deathIncrease', 'positiveIncrease','negativeIncrease','totalTestResultsIncrease']
-OUTPUT_LIST=['mortality %', 'death %']
+
+
+# figure out how to get this list to determine which fields will be graphed:
+OUTPUT_LIST=['positive_increase_per_cent',  'death_per_cent']
+
+
+# edit these variables to change output:
 STATES=['NC', 'SC', 'FL', 'CA', 'GA', 'VA', 'NY']
+DEBUG=True
+SHOW_DATA=True
+LOAD_NEW_DATA=True
+
+
+
 if 'all' in STATES:
     STATES = ["AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DC", "DE", "FL", "GA",
           "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD",
           "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ",
           "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC",
           "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY"]
-DEBUG=True
-SHOW_DATA=True
-LOAD_NEW_DATA=True
 
 def fancy_print(message, data):
     '''
@@ -101,7 +110,6 @@ def analyse(data):
     states=pd.merge(state_abrev, state_pop, left_on="name", right_on="NAME")
     data=pd.merge(states, data.get(GET_FIELDS_COVID), left_on='abbreviation', right_on='state')
     data=data.get(ALL_FIELDS)
-    #pdb.settrace()
     data['positive_per_cent'] = (data['positive'] / data['POPESTIMATE2019']) * 100
     data['negative_per_cent']  = (data['negative'] / data['POPESTIMATE2019']) * 100
     data['positive_increase_per_cent'] = (data['positiveIncrease'] / data['POPESTIMATE2019']) * 100
@@ -121,6 +129,7 @@ def plot_time(data):
     '''
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 6))
     for state in STATES:
+        # figure out how to make positive_increase_per_cent and death_per_cent to be determined by OUTPUT_LIST constant
         ax1.plot(data[data.state == state].date, data[data.state == state].positive_increase_per_cent.rolling(7).mean(), label = state)
         ax2.plot(data[data.state == state].date, data[data.state == state].death_per_cent.rolling(7).mean(), label = state)
 
@@ -145,6 +154,7 @@ def plot_cur(data):
     cur_data = data[data.date == date_cur]
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 6))
     for state in STATES:
+        # figure out how to make positive_increase_per_cent and death_per_cent to be determined by OUTPUT_LIST constant
         ax1.barh(state, cur_data.positive_increase_per_cent[data.state == state])
         ax2.barh(state, cur_data.death_per_cent[data.state == state])
     ax1.set(title=f'New Covid-19 cases as % of population for {date_cur[0:10]}')
