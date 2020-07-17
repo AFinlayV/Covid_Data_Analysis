@@ -24,7 +24,7 @@ Things to do:
 
 '''
 
-
+# Define Global Constants
 STATE_POP_DATA='SCPRC-EST2019-18+POP-RES.csv'
 STATE_ABREV='state_abrev.json'
 COVID_DATA_URL='https://covidtracking.com/api/v1/states/daily.json'
